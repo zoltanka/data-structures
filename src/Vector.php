@@ -1,27 +1,59 @@
 <?php declare(strict_types=1);
 
-namespace ZFekete\Collection;
+namespace ZFekete\DataStructures;
 
-use ZFekete\Exception\InvalidOffsetException;
+use ZFekete\DataStructures\Exception\InvalidTypeException;
+use ZFekete\DataStructures\Exception\TypeMismatchException;
+use ZFekete\DataStructures\Support\AbstractVector;
 
-class Vector
+class Vector extends AbstractVector
 {
+    public const TYPE_INT = 'integer';
+    public const TYPE_STRING = 'string';
+    public const TYPE_FLOAT = 'double';
+    public const TYPE_BOOL = 'boolean';
+    public const TYPE_ARRAY = 'array';
+    public const TYPE_RESOURCE = 'resource';
+
+    private const TYPES = [
+        self::TYPE_INT, self::TYPE_STRING, self::TYPE_FLOAT, self::TYPE_BOOL, self::TYPE_ARRAY, self::TYPE_RESOURCE
+    ];
+
     /**
-     * @var array
+     * @var string
      */
-    protected $elements;
+    protected $type;
 
 
     /**
-     * Vector constructor.
+     * TypedVector constructor.
      *
-     * @param array $elements
+     * @param string $type
+     * @param array  $elements
      */
-    public function __construct(array $elements = [])
+    public function __construct(string $type, array $elements = [])
     {
-        \assert($this->assertKeys($elements), new \InvalidArgumentException('Invalid argument provided!'));
+        \assert($this->assertType($type), new InvalidTypeException('Invalid type provided: ' . $type));
 
-        $this->elements = $elements;
+        parent::__construct($elements);
+
+        $this->type = $type;
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function get(int $key, $default = null)
+    {
+        \assert(
+            $this->assertValue($default),
+            new InvalidTypeException(\sprintf('Argument 2 expected to be %s, %s received!',
+                $this->type, \gettype($default)
+            ))
+        );
+
+        return parent::get($key, $default);
     }
 
 
@@ -37,167 +69,60 @@ class Vector
      */
     public function set(int $key, $value) : self
     {
+        \assert(
+            $this->assertValue($value),
+            new TypeMismatchException(\sprintf('Argument 2 expected to be %s, %s received!',
+                $this->type, \gettype($value)
+            ))
+        );
+
         $items = $this->elements;
 
         $items[$key] = $value;
 
-        return new static($items);
+        return new static($this->type, $items);
     }
 
 
     /**
-     * Returns back the a value from the vector, stored on the given key. If the given key does not exist in the vector
-     * it returns back the value provided in $default parameter.
-     *
-     * @param int  $key
-     * @param null $default
-     *
-     * @return mixed
+     * @inheritdoc
      */
-    public function get(int $key, $default = null)
+    public function firstValue($default = null)
     {
-        return $this->elements[$key] ?? $default;
+        \assert(
+            $this->assertValue($default),
+            new InvalidTypeException(\sprintf('Argument 1 expected to be %s, %s received!',
+                $this->type, \gettype($default)
+            ))
+        );
+
+        return parent::firstValue($default);
     }
 
 
     /**
-     * Returns back a value from the vector, stored on the given key. If the key does not exist throws an exception.
-     *
-     * @param int $key
-     *
-     * @throws InvalidOffsetException
-     *
-     * @return mixed
+     * @inheritdoc
      */
-    public function at(int $key)
+    public function lastValue($default = null)
     {
-        if ($this->has($key) === false) {
-            throw new InvalidOffsetException("Offset \"$key\" does not exist!");
-        }
+        \assert(
+            $this->assertValue($default),
+            new InvalidTypeException(\sprintf('Argument 1 expected to be %s, %s received!',
+                $this->type, \gettype($default)
+            ))
+        );
 
-        return $this->elements[$key];
+        return parent::lastValue($default);
     }
 
-
     /**
-     * Empties the vector. Applies the changes on the current instance.
-     *
-     * @return self
-     */
-    public function clear() : self
-    {
-        $this->elements = [];
-
-        return $this;
-    }
-
-
-    /**
-     * Returns back how many elements the vector has.
-     *
-     * @return int
-     */
-    public function count() : int
-    {
-        return \count($this->elements);
-    }
-
-
-    /**
-     * Returns whether the vector is empty or not.
-     *
-     * @return bool
-     */
-    public function isEmpty() : bool
-    {
-        return $this->count() === 0;
-    }
-
-
-    /**
-     * Returns whether the vector is NOT empty.
-     *
-     * @return bool
-     */
-    public function isNotEmpty() : bool
-    {
-        return $this->isEmpty() === false;
-    }
-
-
-    /**
-     * Filters the elements of the vector. If no parameter provided, an item will be removed base on its truthiness.
-     * Otherwise the given callback function will be called on each element of the vector.
-     *
-     * Returns back the result in a new vector instance.
-     *
-     * @param \Closure|null $callback
-     *
-     * @return static
+     * @inheritdoc
      */
     public function filter(\Closure $callback = null) : self
     {
         $items = \array_filter($this->elements, $callback ?: null, \ARRAY_FILTER_USE_BOTH);
 
-        return new static($items);
-    }
-
-
-    /**
-     * Returns back the lowest key of the vector. If the vector is empty null will be returned.
-     *
-     * @return int|null
-     */
-    public function firstKey() : ?int
-    {
-        return \array_key_first($this->elements);
-    }
-
-
-    /**
-     * Returns back the value on the lowest key in the vector. If the vector is empty, it returns back the value given
-     * in the $default parameter.
-     *
-     * @param mixed $default
-     *
-     * @return mixed
-     */
-    public function firstValue($default = null)
-    {
-        if ($this->isEmpty()) {
-            return $default;
-        }
-
-        return $this->elements[$this->firstKey()];
-    }
-
-
-    /**
-     * Returns back the highest key of the vector. If the vector is empty null will be returned.
-     *
-     * @return int|null
-     */
-    public function lastKey() : ?int
-    {
-        return \array_key_last($this->elements);
-    }
-
-
-    /**
-     * Returns back the value from the vector on the highest key. If the vector is empty it returns back the value
-     * passed in the $default parameter.
-     *
-     * @param bool $default
-     *
-     * @return mixed
-     */
-    public function lastValue($default = true)
-    {
-        if ($this->isEmpty()) {
-            return $default;
-        }
-
-        return $this->elements[$this->lastKey()];
+        return new static($this->type, $items);
     }
 
 
@@ -206,76 +131,19 @@ class Vector
      * present in the vector it returns false.
      *
      * @param mixed $search
-     * @param bool  $strict
      *
      * @return bool
      */
-    public function contains($search, bool $strict = true) : bool
-    {
-        return \in_array($search, $this->elements, $strict);
-    }
-
-
-    /**
-     * Tests the items of the vector against the given
-     *
-     * @param \Closure $closure
-     *
-     * @return bool
-     */
-    public function test(\Closure $closure) : bool
-    {
-        foreach ($this->elements as $k => $v) {
-            $result = \call_user_func_array($closure, [$v, $k]);
-
-            \assert(
-                \is_bool($result),
-                new \InvalidArgumentException('The provided callback function returned a non-bool type!')
-            );
-
-            if ($result === false) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-
-    /**
-     * Returns back elements from the vector on the keys given in the $keys parameter. If a key does not exist, in the
-     * vector, the key will exist in the resulting vector with null value.
-     *
-     * @param int[] $keys
-     *
-     * @return static
-     */
-    public function only(array $keys) : self
+    public function contains($search) : bool
     {
         \assert(
-            $this->assertKeys(\array_flip($keys)),
-            new \InvalidArgumentException('Argument 1 has to be an array of integers!')
+            $this->assertValue($search),
+            new TypeMismatchException(\sprintf('Argument 1 expected to be %s, %s received!',
+                $this->type, \gettype($search)
+            ))
         );
 
-        return static::create(\array_flip($keys))->replace($this);
-    }
-
-
-    /**
-     * Returns back every elements from the vector that are not preset in the given keys parameter.
-     *
-     * @param int[] $keys
-     *
-     * @return static
-     */
-    public function except(array $keys) : self
-    {
-        \assert(
-            $this->assertKeys(\array_flip($keys)),
-            new \InvalidArgumentException('Argument 1 has to be an array of integers!')
-        );
-
-        return static::create(\array_flip($keys))->diff($this);
+        return \in_array($search, $this->elements, true);
     }
 
 
@@ -291,7 +159,13 @@ class Vector
     {
         $keys = \array_keys($this->elements);
 
-        return static::create(\array_map($cb, $this->elements, $keys));
+        $elements = \array_map($cb, $this->elements, $keys);
+
+        \assert($this->assertValues($elements), new InvalidTypeException(
+            'Map callback returned back wrong type.'
+        ));
+
+        return static::create($this->type, $elements);
     }
 
 
@@ -304,7 +178,9 @@ class Vector
      */
     public function merge(Vector $vector) : self
     {
-        return static::create(\array_merge($this->elements, $vector->elements));
+        \assert($this->assertVector($vector), new TypeMismatchException('Argument 1 has to be a TypedVector with the same type!'));
+
+        return static::create($this->type, \array_merge($this->elements, $vector->elements));
     }
 
 
@@ -318,7 +194,9 @@ class Vector
      */
     public function diff(Vector $vector) : self
     {
-        return static::create(\array_diff_key($this->elements, $vector->elements));
+        \assert($this->assertVector($vector), new TypeMismatchException('Argument 1 has to be a TypedVector with the same type!'));
+
+        return static::create($this->type, \array_diff_key($this->elements, $vector->elements));
     }
 
 
@@ -332,7 +210,9 @@ class Vector
      */
     public function intersect(Vector $vector) : self
     {
-        return static::create(\array_intersect_key($this->elements, $vector->elements));
+        \assert($this->assertVector($vector), new TypeMismatchException('Argument 1 has to be a TypedVector with the same type!'));
+
+        return static::create($this->type, \array_intersect_key($this->elements, $vector->elements));
     }
 
 
@@ -351,20 +231,9 @@ class Vector
      */
     public function replace(Vector $vector) : self
     {
-        return static::create(\array_replace($this->elements, $vector->elements));
-    }
+        \assert($this->assertVector($vector), new TypeMismatchException('Argument 1 has to be a TypedVector with the same type!'));
 
-
-    /**
-     * Returns back true if the given key exists in the vector.
-     *
-     * @param int $key
-     *
-     * @return bool
-     */
-    public function has(int $key) : bool
-    {
-        return \array_key_exists($key, $this->elements);
+        return static::create($this->type, \array_replace($this->elements, $vector->elements));
     }
 
 
@@ -378,11 +247,13 @@ class Vector
      */
     public function push(... $elements) : self
     {
+        \assert($this->assertValues($elements), new TypeMismatchException('All arguments has to be a type of ' . $this->type));
+
         $items = $this->elements;
 
         \array_push($items, ... $elements);
 
-        return static::create($items);
+        return static::create($this->type, $items);
     }
 
 
@@ -396,88 +267,102 @@ class Vector
      */
     public function unshift(... $elements) : self
     {
+        \assert($this->assertValues($elements), new TypeMismatchException('All arguments has to be a type of ' . $this->type));
+
         if ($this->isEmpty()) {
-            return new static(\array_reverse($elements));
+            return new static($this->type, \array_reverse($elements));
         }
 
         $firstKey = $this->firstKey() - 1;
 
         $items = $this->elements + \array_combine(\range($firstKey, $firstKey - (\count($elements) - 1)), $elements);
 
-        return static::create($items);
+        return static::create($this->type, $items);
     }
 
 
     /**
-     * Returns back the contents of the vector.
+     * Returns back elements from the vector on the keys given in the $keys parameter. If a key does not exist, in the
+     * vector, the key will exist in the resulting vector with null value.
      *
-     * @return mixed[]
+     * @param int[] $keys
+     *
+     * @return static
      */
-    public function toArray() : array
+    public function only(array $keys) : self
     {
-        return $this->elements;
+        \assert(
+            $this->assertKeys(\array_flip($keys)),
+            new \InvalidArgumentException('Argument 1 has to be an array of integers!')
+        );
+
+        return static::create($this->type, \array_flip($keys))->replace($this);
     }
 
 
     /**
-     * Returns back only the values of the vector, re-indexing it.
+     * Returns back every elements from the vector that are not preset in the given keys parameter.
      *
-     * @return mixed[]
-     */
-    public function value() : array
-    {
-        return \array_values($this->elements);
-    }
-
-
-    /**
-     * Returns back the keys of the vector.
+     * @param int[] $keys
      *
-     * @return int[]
+     * @return static
      */
-    public function keys() : array
+    public function except(array $keys) : self
     {
-        return \array_keys($this->elements);
+        \assert(
+            $this->assertKeys(\array_flip($keys)),
+            new \InvalidArgumentException('Argument 1 has to be an array of integers!')
+        );
+
+        return static::create($this->type, \array_flip($keys))->diff($this);
     }
 
 
     /**
      * Creates an instance of vector using the given elements.
      *
-     * @param array $elements
+     * @param string $type
+     * @param array  $elements
      *
      * @return static
      */
-    public static function create(array $elements = []) : self
+    public static function create(string $type, array $elements = []) : self
     {
-        return new static($elements);
+        return new static($type, $elements);
     }
 
 
     /**
-     * Returns back true if the given value is integer.
-     *
-     * @param mixed $key
+     * @param string $type
      *
      * @return bool
      */
-    protected function assertKey($key) : bool
+    final protected function assertType(string $type) : bool
     {
-        return \is_int($key);
+        return \in_array($type, self::TYPES, true) || \class_exists($type);
     }
 
 
-    /**
-     * Checks of all keys of the given array is integer. Returns back true if yes, otherwise false.
-     *
-     * @param mixed[] $assert
-     *
-     * @return bool
-     */
-    protected function assertKeys(array $assert) : bool
+    final protected function assertValue($value) : bool
     {
-        return \array_filter(\array_keys($assert), function ($key) : bool {
-            return $this->assertKey($key) === false;
-        }) === [];
+        return $value instanceof $this->type || \gettype($value) === $this->type || $value === null;
+    }
+
+
+    final protected function assertValues(array $values) : bool
+    {
+        foreach ($values as $value) {
+            if ($this->assertValue($value) === false) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+
+    final protected function assertVector(Vector $structure) : bool
+    {
+        return $this->type === $structure->type;
     }
 }

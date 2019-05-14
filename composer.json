@@ -10,7 +10,8 @@
     ],
     "autoload" : {
         "psr-4" : {
-            "ZFekete\\Collection\\" : "src/"
+            "ZFekete\\DataStructures\\" : "src/",
+            "ZFekete\\DataStructures\\Tests\\" : "tests/"
         }
     },
     "require": {
