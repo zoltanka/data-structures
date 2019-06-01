@@ -1,8 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace ZFekete\DataStructures;
-
-use ZFekete\DataStructures\Support\AbstractVector;
+namespace ZFekete\DataStructures\Vector;
 
 class UntypedVector extends AbstractVector
 {
@@ -123,6 +121,50 @@ class UntypedVector extends AbstractVector
 
 
     /**
+     * Returns back a vector containing all element of the current vector that are not present in the given array.
+     *
+     * @param mixed[] $elements
+     *
+     * @return static
+     */
+    public function diff(array $elements) : self
+    {
+        \assert(
+            $this->assertKeys($elements),
+            new \InvalidArgumentException('Argument 1 has to be an array of integers!')
+        );
+
+        return static::create(\array_diff($this->elements, $elements));
+    }
+
+
+    /**
+     * Returns back a vector containing all element of the current vector that are not present in the given vector.
+     *
+     * @param AbstractVector $vector
+     *
+     * @return static
+     */
+    public function diffVector(AbstractVector $vector) : self
+    {
+        return static::diff($vector->elements);
+    }
+
+
+    /**
+     * Returns back a vector containing all element of the current vector whose keys are not present in the given array..
+     *
+     * @param mixed[] $vector
+     *
+     * @return static
+     */
+    public function diffKeys(array $vector) : self
+    {
+        return static::create(\array_diff_key($this->elements, $vector));
+    }
+
+
+    /**
      * Returns back a vector containing all element of the current vector whose keys are not present in the given
      * vector.
      *
@@ -130,23 +172,61 @@ class UntypedVector extends AbstractVector
      *
      * @return static
      */
-    public function diff(AbstractVector $vector) : self
+    public function diffVectorKeys(AbstractVector $vector) : self
     {
-        return static::create(\array_diff_key($this->elements, $vector->elements));
+        return static::diffKeys($vector->elements);
     }
 
 
     /**
-     * Returns back a vector containing all element from the current vector which keys that are present in the given
-     * vector.
+     * Returns back a vector containing all element from the current vector which are present in the given array.
+     *
+     * @param mixed[] $elements
+     *
+     * @return static
+     */
+    public function intersect(array $elements) : self
+    {
+        return static::create(\array_intersect($this->elements, $elements));
+    }
+
+
+    /**
+     * Returns back a vector containing all element from the current vector which are present in the given vector.
      *
      * @param AbstractVector $vector
      *
      * @return static
      */
-    public function intersect(AbstractVector $vector) : self
+    public function intersectVector(AbstractVector $vector) : self
     {
-        return static::create(\array_intersect_key($this->elements, $vector->elements));
+        return static::intersect($vector->elements);
+    }
+
+
+    /**
+     * Returns back a vector containing all element from the current vector which keys are present in the given array.
+     *
+     * @param mixed[] $elements
+     *
+     * @return static
+     */
+    public function intersectKeys(array $elements) : self
+    {
+        return static::create(\array_intersect_key($this->elements, $elements));
+    }
+
+
+    /**
+     * Returns back a vector containing all element from the current vector which keys are present in the given vector.
+     *
+     * @param AbstractVector $vector
+     *
+     * @return static
+     */
+    public function intersectVectorKeys(AbstractVector $vector) : self
+    {
+        return static::intersectKeys($vector->elements);
     }
 
 

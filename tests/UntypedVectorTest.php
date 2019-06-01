@@ -449,8 +449,6 @@ class UntypedVectorTest extends TestCase
     {
         $this->assertEquals($expected, $source->count());
     }
-
-
     //</editor-fold>
 
 
@@ -689,52 +687,349 @@ class UntypedVectorTest extends TestCase
     //</editor-fold>
 
 
-    public function testMap()
+    //<editor-fold desc="map()">
+    public function mapTestProvider()
     {
-        $source = UntypedVector::create([]);
-
-        $this->assertSame([], $source->map(function ($x) : array {
+        $doingNothingCb = function(array $x) : array {
             return $x;
-        })->elements);
+        };
 
-
-        $multiplyCallback = function(int $x) : int {
+        $squareCb = function(int $x) : int {
             return $x * $x;
         };
 
-        $source = UntypedVector::create([1, 2, 3, 4]);
+        $appendCb = function(string $x) : string {
+            return "Prefix " . $x;
+        };
 
-        $this->assertSame([1, 4, 9, 16], $source->map($multiplyCallback)->elements);
+        return [
+            [UntypedVector::create([]), $doingNothingCb, []],
+            [UntypedVector::create([1, 2, 3, 4]), $squareCb, [1, 4, 9, 16]],
+            [UntypedVector::create(['Foo', 'Baz']), $appendCb, ['Prefix Foo', 'Prefix Baz']]
+        ];
     }
 
 
-    public function testMerge()
+    /**
+     * @dataProvider mapTestProvider
+     *
+     * @param UntypedVector $source
+     * @param Closure       $callback
+     * @param array         $expected
+     */
+    public function testMap(UntypedVector $source, \Closure $callback, array $expected)
     {
+        $sourceBackup = $source;
 
+        $result = $source->map($callback);
+
+        $this->assertSame($expected, $result->elements);
+        $this->assertSame($source->elements, $sourceBackup->elements);
+    }
+    //</editor-fold>
+
+
+    //<editor-fold desc="merge()">
+    public function mergeTestProvider()
+    {
+        return [
+            [UntypedVector::create([]),      UntypedVector::create([]),  [],  []],
+            [UntypedVector::create([1]),     UntypedVector::create([2]), [1, 2], [2, 1]],
+            [UntypedVector::create(['Foo']), UntypedVector::create([1]), ['Foo', 1], [1, 'Foo']],
+
+            [
+                UntypedVector::create([0 => 'Foo', 2 => 'Baz']),
+                UntypedVector::create([0 => 1, 1 => 2]),
+                [0 => 'Foo', 1 => 'Baz', 2 => 1, 3 => 2],
+                [0 => 1, 1 => 2, 2 => 'Foo', 3 => 'Baz']
+            ],
+        ];
     }
 
 
-    public function testFilter()
+    /**
+     * @dataProvider mergeTestProvider
+     *
+     * @param UntypedVector $a
+     * @param UntypedVector $b
+     * @param array         $expectedBtoA
+     * @param array         $expectedAtoB
+     */
+    public function testMerge(UntypedVector $a, UntypedVector $b, array $expectedBtoA, array $expectedAtoB)
     {
+        $aSave = $a;
+        $bSave = $b;
 
+        $this->assertSame($expectedBtoA, $a->merge($b)->elements);
+        $this->assertSame($expectedAtoB, $b->merge($a)->elements);
+
+        $this->assertSame($a->elements, $aSave->elements);
+        $this->assertSame($b->elements, $bSave->elements);
+    }
+    //</editor-fold>
+
+
+    //<editor-fold desc="filter()">
+    public function filterTestProvider()
+    {
+        $intFilter = function($x) : bool {
+            return \is_int($x);
+        };
+        $gt5Filter = function($x) : bool {
+            return $x > 5;
+        };
+
+        return [
+            [UntypedVector::create([]),                   [],                null],
+            [UntypedVector::create([6, 'Foo', 'Baz', 0]), [6, 'Foo', 'Baz'], null],
+            [UntypedVector::create([6, 'Foo', 'Baz', 0]), [0 => 6, 3 => 0],  $intFilter],
+            [UntypedVector::create([6, 'Foo', 'Baz', 0]), [6], $gt5Filter],
+        ];
     }
 
 
-    public function testDiff()
+    /**
+     * @dataProvider filterTestProvider
+     *
+     * @param UntypedVector $source
+     * @param array         $expected
+     * @param Closure|null  $callback
+     */
+    public function testFilter(UntypedVector $source, array $expected, ?\Closure $callback = null)
     {
+        $save = $source;
 
+        $this->assertSame($expected, $source->filter($callback)->elements);
+        $this->assertSame($save->elements, $source->elements);
+    }
+    //</editor-fold>
+
+
+    //<editor-fold desc="diff()">
+    public function diffTestProvider()
+    {
+        return [
+            [UntypedVector::create([]), [], []],
+            [UntypedVector::create([]), [1], []],
+            [UntypedVector::create([1]), [1], []],
+            [UntypedVector::create([1, 3, 5]), [1, 2, 3], [2 => 5]],
+            [UntypedVector::create(['Foo', 'Baz', 1, 2]), ['Baz', 2], [0 => 'Foo', 2 => 1]],
+        ];
     }
 
 
-    public function testIntersect()
+    /**
+     * @dataProvider diffTestProvider
+     *
+     * @param UntypedVector $a
+     * @param array         $b
+     * @param array         $expected
+     */
+    public function testDiff(UntypedVector $a, array $b, array $expected)
     {
+        $this->assertSame($expected, $a->diff($b));
+    }
+    //</editor-fold>
 
+
+    //<editor-fold desc="diffVector()">
+    public function diffVectorTestProvider()
+    {
+        return [
+            [UntypedVector::create([]), UntypedVector::create([]), []],
+            [UntypedVector::create([]), UntypedVector::create([1]), []],
+            [UntypedVector::create([1]), UntypedVector::create([1]), []],
+            [UntypedVector::create([1, 3, 5]), UntypedVector::create([1, 2, 3]), [2 => 5]],
+            [UntypedVector::create(['Foo', 'Baz', 1, 2]), UntypedVector::create(['Baz', 2]), [0 => 'Foo', 2 => 1]],
+        ];
     }
 
 
-    public function testReplace()
+    /**
+     * @dataProvider diffVectorTestProvider
+     *
+     * @param UntypedVector $a
+     * @param UntypedVector $b
+     * @param array         $expected
+     */
+    public function testDiffVector(UntypedVector $a, UntypedVector $b, array $expected)
     {
+        $this->assertSame($expected, $a->diffVector($b)->elements);
+    }
+    //</editor-fold>
 
+
+    //<editor-fold desc="diffKeys()">
+    public function diffKeysTestProvider()
+    {
+        return [
+            [UntypedVector::create([]), [], []],
+            [UntypedVector::create([]), [1, 2], []],
+            [UntypedVector::create([3, 4]), [], [3, 4]],
+            [UntypedVector::create([0 => 3, 5 => 4]), [], [0 => 3, 5 => 4]],
+            [UntypedVector::create([0 => 'Foo', 5 => 'Baz']), [0 => 2, 2 => 1], [5 => 'Baz']],
+        ];
+    }
+
+
+    /**
+     * @dataProvider diffKeysTestProvider
+     *
+     * @param UntypedVector $a
+     * @param array         $b
+     * @param array         $expected
+     */
+    public function testDiffKeys(UntypedVector $a, array $b, array $expected)
+    {
+        $this->assertSame($expected, $a->diffKeys($b)->elements);
+    }
+    //</editor-fold>
+
+
+    //<editor-fold desc="diffVectorKeys()">
+    public function diffVectorKeysTestProvider()
+    {
+        return [
+            [UntypedVector::create([]),                       UntypedVector::create([]),               []],
+            [UntypedVector::create([]),                       UntypedVector::create([1, 2]),           []],
+            [UntypedVector::create([3, 4]),                   UntypedVector::create([]),               [3, 4]],
+            [UntypedVector::create([0 => 3, 5 => 4]),         UntypedVector::create([]),               [0 => 3, 5 => 4]],
+            [UntypedVector::create([0 => 'Foo', 5 => 'Baz']), UntypedVector::create([0 => 2, 2 => 1]), [5 => 'Baz']],
+        ];
+    }
+
+
+    /**
+     * @dataProvider diffVectorKeysTestProvider
+     *
+     * @param UntypedVector $a
+     * @param UntypedVector $b
+     * @param array         $expected
+     */
+    public function testDiffVectorKeys(UntypedVector $a, UntypedVector $b, array $expected)
+    {
+        $this->assertSame($expected, $a->diffVectorKeys($b)->elements);
+    }
+    //</editor-fold>
+
+
+    //<editor-fold desc="intersect()">
+    public function intersectTestProvider()
+    {
+        return [
+            [UntypedVector::create([]),                   [],         []],
+            [UntypedVector::create([]),                   [1],        []],
+            [UntypedVector::create([2]),                  [],         []],
+            [UntypedVector::create([2]),                  [2],        [2]],
+            [UntypedVector::create([1, 3, 4, 5]),         [1, 2, 3],  [0 => 1, 2 => 3]],
+            [UntypedVector::create(['Foo', 'Baz', 1, 2]), ['Baz', 1], [1 => 'Baz', 2 => 1]]
+        ];
+    }
+
+
+    /**
+     * @dataProvider intersectTestProvider
+     *
+     * @param UntypedVector $a
+     * @param array         $b
+     * @param array         $expected
+     */
+    public function testIntersect(UntypedVector $a, array $b, array $expected)
+    {
+        $this->assertSame($expected, $a->intersect($b)->elements);
+    }
+    //</editor-fold>
+
+
+    //<editor-fold desc="intersectVector()">
+    public function intersectVectorTestProvider()
+    {
+        return [
+            [UntypedVector::create([]),                   UntypedVector::create([]),         []],
+            [UntypedVector::create([]),                   UntypedVector::create([1]),        []],
+            [UntypedVector::create([2]),                  UntypedVector::create([]),         []],
+            [UntypedVector::create([2]),                  UntypedVector::create([2]),        [2]],
+            [UntypedVector::create([1, 3, 4, 5]),         UntypedVector::create([1, 2, 3]),  [0 => 1, 2 => 3]],
+            [UntypedVector::create(['Foo', 'Baz', 1, 2]), UntypedVector::create(['Baz', 1]), [1 => 'Baz', 2 => 1]]
+        ];
+    }
+
+
+    /**
+     * @dataProvider intersectVectorTestProvider
+     *
+     * @param UntypedVector $a
+     * @param UntypedVector $b
+     * @param array         $expected
+     */
+    public function testIntersectVector(UntypedVector $a, UntypedVector $b, array $expected)
+    {
+        $this->assertSame($expected, $a->intersectVector($b)->elements);
+    }
+    //</editor-fold>
+
+
+    //<editor-fold desc="intersectKeys">
+    public function intersectKeysTestProvider()
+    {
+        return [
+            [UntypedVector::create([]),               [],     []],
+            [UntypedVector::create([2 => 1, 4 => 2]), [],     []],
+            [UntypedVector::create([]),               [1, 2], []],
+
+            [UntypedVector::create([0 => 'Foo', 3 => 1]), [0 => 1, 2 => 2],             [0 => 'Foo']],
+            [UntypedVector::create([2 => 'Baz', 5 => 3]), [3 => 1, 4 => 2, 5 => 'Baz'], [5 => 3]],
+        ];
+    }
+
+
+    /**
+     * @dataProvider intersectKeysTestProvider
+     *
+     * @param UntypedVector $a
+     * @param array         $b
+     * @param array         $expected
+     */
+    public function testIntersectKeys(UntypedVector $a, array $b, array $expected)
+    {
+        $this->assertSame($expected, $a->intersectKeys($b));
+    }
+    //</editor-fold>
+
+
+    //<editor-fold desc="intersectVectorKeys">
+    public function intersectVectorKeysTestProvider()
+    {
+        return [
+            [UntypedVector::create([]),               UntypedVector::create([]),     []],
+            [UntypedVector::create([2 => 1, 4 => 2]), UntypedVector::create([]),     []],
+            [UntypedVector::create([]),               UntypedVector::create([1, 2]), []],
+
+            [UntypedVector::create([0 => 'Foo', 3 => 1]), UntypedVector::create([0 => 1, 2 => 2]),             [0 => 'Foo']],
+            [UntypedVector::create([2 => 'Baz', 5 => 3]), UntypedVector::create([3 => 1, 4 => 2, 5 => 'Baz']), [5 => 3]],
+        ];
+    }
+
+
+    /**
+     * @dataProvider intersectKeysTestProvider
+     *
+     * @param UntypedVector $a
+     * @param array         $b
+     * @param array         $expected
+     */
+    public function testIntersectVectorKeys(UntypedVector $a, array $b, array $expected)
+    {
+        $this->assertSame($expected, $a->intersectKeys($b));
+    }
+    //</editor-fold>
+
+
+
+
+    public function testReplace(UntypedVector $a, UntypedVector $b, array $expected)
+    {
+        $this->assertSame($expected, $a->replace($b));
     }
 
 

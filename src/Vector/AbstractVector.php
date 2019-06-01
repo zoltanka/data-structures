@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace ZFekete\DataStructures\Support;
+namespace ZFekete\DataStructures\Vector;
 
 use ZFekete\DataStructures\Exception\InvalidOffsetException;
 
@@ -129,7 +129,7 @@ abstract class AbstractVector implements \IteratorAggregate, \JsonSerializable
 
     /**
      * Filters the elements of the vector. If no parameter provided, an item will be removed base on its truthiness.
-     * Otherwise the given callback function will be called on each element of the vector.
+     * Otherwise the given callback function will be called on each element of the vector. Keeps the keys of the values.
      *
      * Returns back the result in a new vector instance.
      *
@@ -137,9 +137,13 @@ abstract class AbstractVector implements \IteratorAggregate, \JsonSerializable
      *
      * @return static
      */
-    public function filter(\Closure $callback = null)
+    public function filter(?\Closure $callback = null)
     {
-        $items = \array_filter($this->elements, $callback ?: null, \ARRAY_FILTER_USE_BOTH);
+        if ($callback === null) {
+            return new static(\array_filter($this->elements));
+        }
+
+        $items = \array_filter($this->elements, $callback, \ARRAY_FILTER_USE_BOTH);
 
         return new static($items);
     }
@@ -154,6 +158,8 @@ abstract class AbstractVector implements \IteratorAggregate, \JsonSerializable
      */
     public function every(\Closure $closure) : bool
     {
+        if ($this->isEmpty()) { return false; }
+
         foreach ($this->elements as $k => $v) {
             $result = \call_user_func_array($closure, [$v, $k]);
 

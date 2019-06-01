@@ -1,10 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace ZFekete\DataStructures;
+namespace ZFekete\DataStructures\Vector;
 
 use ZFekete\DataStructures\Exception\InvalidTypeException;
 use ZFekete\DataStructures\Exception\TypeMismatchException;
-use ZFekete\DataStructures\Support\AbstractVector;
 
 class Vector extends AbstractVector
 {

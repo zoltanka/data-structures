@@ -2,7 +2,7 @@
 
 namespace ZFekete\DataStructures\Tests\Mock;
 
-use ZFekete\DataStructures\UntypedVector;
+use ZFekete\DataStructures\Vector\UntypedVector;
 
 class UntypedVectorMock extends UntypedVector
 {
