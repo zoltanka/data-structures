@@ -6,5 +6,5 @@ use ZFekete\DataStructures\Vector\UntypedVector;
 
 class UntypedVectorMock extends UntypedVector
 {
-    public $elements;
+    public array $elements;
 }

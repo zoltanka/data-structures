@@ -1,5 +1,6 @@
 <?php declare(strict_types=1);
 
+use ZFekete\DataStructures\Exception\InvalidOffsetException;
 use ZFekete\DataStructures\Tests\Mock\UntypedVectorMock as UntypedVector;
 use PHPUnit\Framework\TestCase;
 
@@ -12,17 +13,17 @@ class UntypedVectorTest extends TestCase
         $testCouldRun = true;
 
         if (($zendAssertIni = ini_get('zend.assertions')) != '1') {
-            echo \sprintf("zend.assertions=%s; Unit test should be run with this settings value 1\n", $zendAssertIni);
+            echo sprintf("zend.assertions=%s; Unit test should be run with this settings value 1\n", $zendAssertIni);
             $testCouldRun = false;
         }
 
         if (($assertExceptionIni = ini_get('assert.exception')) != '1') {
-            echo \sprintf("assert.exception=%s; Unit test should be run with this settings value 1\n", $assertExceptionIni);
+            echo sprintf("assert.exception=%s; Unit test should be run with this settings value 1\n", $assertExceptionIni);
             $testCouldRun = false;
         }
 
         if (($assertActiveIni = ini_get('assert.active')) != '1') {
-            echo \sprintf("assert.active=%s; Unit test should be run with this settings value 1\n", $assertActiveIni);
+            echo sprintf("assert.active=%s; Unit test should be run with this settings value 1\n", $assertActiveIni);
             $testCouldRun = false;
         }
 
@@ -31,9 +32,13 @@ class UntypedVectorTest extends TestCase
         }
     }
 
-
     //<editor-fold desc="all()">
-    public function allTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testAll()}
+     *
+     * @return array
+     */
+    public function allTestProvider(): array
     {
         return [
             [UntypedVector::create([]), []],
@@ -45,22 +50,29 @@ class UntypedVectorTest extends TestCase
         ];
     }
 
-
     /**
      * @dataProvider allTestProvider
      *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::all
+     *
      * @param UntypedVector $vector
      * @param array         $expected
+     *
+     * @return void
      */
-    public function testAll(UntypedVector $vector, array $expected)
+    public function testAll(UntypedVector $vector, array $expected): void
     {
         $this->assertSame($expected, $vector->all());
     }
     //</editor-fold>
 
-
     //<editor-fold desc="values()">
-    public function valuesTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testValues()}
+     *
+     * @return array
+     */
+    public function valuesTestProvider(): array
     {
         return [
             // Single types
@@ -79,22 +91,29 @@ class UntypedVectorTest extends TestCase
         ];
     }
 
-
     /**
      * @dataProvider valuesTestProvider
      *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::values
+     *
      * @param UntypedVector $source
      * @param array         $expected
+     *
+     * @return void
      */
-    public function testValues(UntypedVector $source, array $expected)
+    public function testValues(UntypedVector $source, array $expected): void
     {
         $this->assertSame($expected, $source->values());
     }
     //</editor-fold>
 
-
     //<editor-fold desc="keys()">
-    public function keysTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testKeys()}
+     *
+     * @return array
+     */
+    public function keysTestProvider(): array
     {
         return [
             [UntypedVector::create([]), []],
@@ -107,22 +126,29 @@ class UntypedVectorTest extends TestCase
         ];
     }
 
-
     /**
      * @dataProvider keysTestProvider
      *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::keys
+     *
      * @param UntypedVector $source
      * @param array         $expected
+     *
+     * @return void
      */
-    public function testKeys(UntypedVector $source, array $expected)
+    public function testKeys(UntypedVector $source, array $expected): void
     {
         $this->assertSame($expected, $source->keys());
     }
     //</editor-fold>
 
-
     //<editor-fold desc="set()">
-    public function setTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testSet()}
+     *
+     * @return array
+     */
+    public function setTestProvider(): array
     {
         return [
             // int type
@@ -141,51 +167,75 @@ class UntypedVectorTest extends TestCase
         ];
     }
 
-
     /**
      * @dataProvider setTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::set
+     * @covers \ZFekete\DataStructures\Vector\AbstractVector::set
+     *
+     * Test the set method with various types.
      *
      * @param UntypedVector $a
      * @param int           $key
      * @param mixed         $value
      * @param UntypedVector $expected
+     *
+     * @return void
      */
-    public function testSet(UntypedVector $a, int $key, $value, UntypedVector $expected)
+    public function testSet(UntypedVector $a, int $key, $value, UntypedVector $expected): void
     {
         $this->assertSame($expected->elements, $a->set($key, $value)->elements);
     }
 
-
-    public function setTestTypesProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testSetTypes()}
+     *
+     * @return array
+     */
+    public function setTestTypesProvider(): array
     {
         return [
-            // Mixed type
+            // Mixed types to empty Vector
             [UntypedVector::create([]), 1, '1', UntypedVector::create([1 => '1'])],
             [UntypedVector::create([]), -1, '2', UntypedVector::create([-1 => '2'])],
             [UntypedVector::create([]), 0, '2', UntypedVector::create([0 => '2'])],
+            [UntypedVector::create([]), 1, 2, UntypedVector::create([1 => 2])],
+            [UntypedVector::create([]), 2, true, UntypedVector::create([2 => true])],
+            [UntypedVector::create([]), 3, 2.18, UntypedVector::create([3 => 2.18])],
 
             [UntypedVector::create([1 => true]), 1, 1, UntypedVector::create([1 => 1])],
         ];
     }
 
-
     /**
      * @dataProvider setTestTypesProvider
+     *
+     * Tests the "set" method with different types.
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::set
      *
      * @param UntypedVector $a
      * @param int           $key
      * @param mixed         $value
      * @param UntypedVector $expected
+     *
+     * @return void
      */
-    public function testSetTypes(UntypedVector $a, int $key, $value, UntypedVector $expected)
+    public function testSetTypes(UntypedVector $a, int $key, $value, UntypedVector $expected): void
     {
         $new = $a->set($key, $value);
 
         $this->assertSame($expected->elements, $new->elements);
     }
 
-
-    public function testSetReference()
+    /**
+     * Tests, that the set method should create a new object after the call.
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::set
+     *
+     * @return void
+     */
+    public function testSetReference(): void
     {
         $key   = 0;
         $value = 2;
@@ -199,22 +249,37 @@ class UntypedVectorTest extends TestCase
     }
     //</editor-fold>
 
-
     //<editor-fold desc="get()">
-    public function testGet()
+    /**
+     * Tests the "get" method for different types.
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::get
+     *
+     * @return void
+     */
+    public function testGet(): void
     {
         $source  = UntypedVector::create([1 => 'Foo', 2 => 666]);
         $default = 'Default';
 
         $this->assertSame(null, $source->get(0));
         $this->assertNotSame('666', $source->get(2));
+        $this->assertSame(666, $source->get(2));
         $this->assertSame($default, $source->get(10, $default));
     }
     //</editor-fold>
 
-
     //<editor-fold desc="at()">
-    public function testAtSuccessful()
+    /**
+     * Tests the "at" method with existing keys.
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::at
+     *
+     * @throws InvalidOffsetException
+     *
+     * @return void
+     */
+    public function testAtSuccessful(): void
     {
         $source = UntypedVector::create([1 => 'Foo', 2 => 666]);
 
@@ -224,57 +289,75 @@ class UntypedVectorTest extends TestCase
         $this->assertNotSame('666', $source->at(2));
     }
 
-
-    public function testAtUnsuccessful()
+    /**
+     * Tests the "at" method with non-existing key.
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::at
+     *
+     * @throws InvalidOffsetException
+     *
+     * @return void
+     */
+    public function testAtUnsuccessful(): void
     {
         $source = UntypedVector::create([1 => 'Foo', 2 => 666]);
 
-        $this->expectException(\ZFekete\DataStructures\Exception\InvalidOffsetException::class);
+        $this->expectException(InvalidOffsetException::class);
 
         $source->at(3);
     }
     //</editor-fold>
 
-
     //<editor-fold desc="only()">
-    public function onlySuccessfulTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testOnlySuccessful()}
+     *
+     * @return array
+     */
+    public function onlySuccessfulTestProvider(): array
     {
         $keys = [1, 3];
 
         return [
             [UntypedVector::create([1 => 12, 3 => null]), $keys, [1 => 12, 3 => null]],
             [UntypedVector::create([1 => 12, 3 => 'Foo']), $keys, [1 => 12, 3 => 'Foo']],
-            [UntypedVector::create([1 => null, 3 => null]), $keys, [1 => null, 3 => null]],
+            [UntypedVector::create([1 => null, 3 => null]), $keys, [1 => null, 3 => null]]
         ];
     }
 
-
     /**
      * @dataProvider onlySuccessfulTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::only
      *
      * @param UntypedVector $source
      * @param int[]         $keys
      * @param array         $expected
      */
-    public function testOnlySuccessful(UntypedVector $source, array $keys, array $expected)
+    public function testOnlySuccessful(UntypedVector $source, array $keys, array $expected): void
     {
         $this->assertSame($expected, $source->only($keys)->elements);
     }
 
-
-    public function onlyUnsuccessfulTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testOnlyUnsuccessful()}
+     *
+     * @return array
+     */
+    public function onlyUnsuccessfulTestProvider(): array
     {
         $keys = [1, 2, 4];
 
         return [
-            [UntypedVector::create(), $keys, \array_fill_keys($keys, null)],
+            [UntypedVector::create(), $keys, array_fill_keys($keys, null)],
             [UntypedVector::create([1 => 12, 3 => null]), $keys, [1 => 12, 2 => null, 4 => null]]
         ];
     }
 
-
     /**
      * @dataProvider onlyUnsuccessfulTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::only()
      *
      * @param UntypedVector $source
      * @param int[]         $keys
@@ -286,9 +369,13 @@ class UntypedVectorTest extends TestCase
     }
     //</editor-fold>
 
-
     //<editor-fold desc="except()">
-    public function exceptTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testExcept()}
+     *
+     * @return array
+     */
+    public function exceptTestProvider(): array
     {
         $keys = [1, 3];
 
@@ -299,23 +386,32 @@ class UntypedVectorTest extends TestCase
         ];
     }
 
-
     /**
+     * Tests the "except" method.
+     *
      * @dataProvider exceptTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::except
      *
      * @param UntypedVector $source
      * @param int[]         $keys
      * @param array         $expected
+     *
+     * @return void
      */
-    public function testExcept(UntypedVector $source, array $keys, array $expected)
+    public function testExcept(UntypedVector $source, array $keys, array $expected): void
     {
         $this->assertSame($expected, $source->except($keys)->elements);
     }
     //</editor-fold>
 
-
     //<editor-fold desc="firstKey()">
-    public function firstKeyProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testFirstKey()}
+     *
+     * @return array
+     */
+    public function firstKeyProvider(): array
     {
         return [
             [UntypedVector::create([1 => 'Foo', 2 => 666, -5 => 'Baz']), 1],
@@ -323,22 +419,31 @@ class UntypedVectorTest extends TestCase
         ];
     }
 
-
     /**
+     * Tests "firstKey" method.
+     *
      * @dataProvider firstKeyProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::firstKey
      *
      * @param UntypedVector $vector
      * @param mixed         $expected
+     *
+     * @return void
      */
-    public function testFirstKey(UntypedVector $vector, int $expected)
+    public function testFirstKey(UntypedVector $vector, int $expected): void
     {
         $this->assertSame($expected, $vector->firstKey());
     }
     //</editor-fold>
 
-
     //<editor-fold desc="firstValue()">
-    public function firstValueTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testFirstValue()}
+     *
+     * @return array
+     */
+    public function firstValueTestProvider(): array
     {
         return [
             [UntypedVector::create([1 => 'Foo', 3 => 666]), 'Foo'],
@@ -347,20 +452,31 @@ class UntypedVectorTest extends TestCase
         ];
     }
 
-
     /**
+     * Tests "firstValue" method without testing the default value parameter.
+     *
      * @dataProvider firstValueTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::firstValue
      *
      * @param UntypedVector $vector
      * @param mixed         $expected
+     *
+     * @return void
      */
-    public function testFirstValue(UntypedVector $vector, $expected)
+    public function testFirstValue(UntypedVector $vector, $expected): void
     {
         $this->assertSame($expected, $vector->firstValue());
     }
 
-
-    public function testFirstValueWithDefault()
+    /**
+     * Tests "firstValue" method with default value parameter.
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::firstValue
+     *
+     * @return void
+     */
+    public function testFirstValueWithDefault(): void
     {
         $source  = UntypedVector::create([]);
         $default = 12;
@@ -369,9 +485,13 @@ class UntypedVectorTest extends TestCase
     }
     //</editor-fold>
 
-
     //<editor-fold desc="lastKey()">
-    public function lastKeyProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testLastKey()}
+     *
+     * @return array
+     */
+    public function lastKeyProvider(): array
     {
         return [
             [UntypedVector::create([1 => 'Foo', 2 => 666, -5 => 'Baz']), -5],
@@ -379,22 +499,31 @@ class UntypedVectorTest extends TestCase
         ];
     }
 
-
     /**
+     * Tests "lastKey" method.
+     *
      * @dataProvider lastKeyProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::lastKey
      *
      * @param UntypedVector $vector
      * @param int           $expected
+     *
+     * @return void
      */
-    public function testLastKey(UntypedVector $vector, int $expected)
+    public function testLastKey(UntypedVector $vector, int $expected): void
     {
         $this->assertSame($expected, $vector->lastKey());
     }
     //</editor-fold>
 
-
     //<editor-fold desc="lastValue()">
-    public function lastValueTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testLastValue()}
+     *
+     * @return array
+     */
+    public function lastValueTestProvider(): array
     {
         return [
             [UntypedVector::create([1 => 'Foo', 3 => 666]), 666],
@@ -403,20 +532,27 @@ class UntypedVectorTest extends TestCase
         ];
     }
 
-
     /**
+     * Tests "lastValue" method without default parameter.
+     *
      * @dataProvider lastValueTestProvider
      *
      * @param UntypedVector $vector
-     * @param               $expected
+     * @param mixed         $expected
+     *
+     * @return void
      */
-    public function testLastValue(UntypedVector $vector, $expected)
+    public function testLastValue(UntypedVector $vector, $expected): void
     {
         $this->assertSame($expected, $vector->lastValue());
     }
 
-
-    public function testLastValueWithDefault()
+    /**
+     * Tests "lastValue" method with default value parameter.
+     *
+     * @return void
+     */
+    public function testLastValueWithDefault(): void
     {
         $source  = UntypedVector::create([]);
         $default = 12;
@@ -426,9 +562,13 @@ class UntypedVectorTest extends TestCase
     }
     //</editor-fold>
 
-
     //<editor-fold desc="count()">
-    public function countTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testCount()}
+     *
+     * @return array
+     */
+    public function countTestProvider(): array
     {
         return [
             [UntypedVector::create([]), 0],
@@ -438,22 +578,33 @@ class UntypedVectorTest extends TestCase
         ];
     }
 
-
     /**
+     * Test "count" method.
+     *
      * @dataProvider countTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::count
      *
      * @param UntypedVector $source
      * @param int           $expected
+     *
+     * @return void
      */
-    public function testCount(UntypedVector $source, int $expected)
+    public function testCount(UntypedVector $source, int $expected): void
     {
         $this->assertEquals($expected, $source->count());
     }
     //</editor-fold>
 
-
     //<editor-fold desc="isEmpty()">
-    public function testIsEmpty()
+    /**
+     * Tests "isEmpty" method.
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::isEmpty
+     *
+     * @return void
+     */
+    public function testIsEmpty(): void
     {
         $this->assertTrue(UntypedVector::create()->isEmpty());
         $this->assertTrue(UntypedVector::create([])->isEmpty());
@@ -465,9 +616,15 @@ class UntypedVectorTest extends TestCase
     }
     //</editor-fold>
 
-
     //<editor-fold desc="isNotEmpty()">
-    public function testIsNotEmpty()
+    /**
+     * Tests "isNotEmpty" method.
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::isNotEmpty
+     *
+     * @return void
+     */
+    public function testIsNotEmpty(): void
     {
         $this->assertFalse(UntypedVector::create()->isNotEmpty());
         $this->assertFalse(UntypedVector::create([])->isNotEmpty());
@@ -479,9 +636,13 @@ class UntypedVectorTest extends TestCase
     }
     //</editor-fold>
 
-
     //<editor-fold desc="test()">
-    public function hasTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testHas()}
+     *
+     * @return array
+     */
+    public function hasTestProvider(): array
     {
         return [
             [UntypedVector::create(),                      1, false],
@@ -492,23 +653,32 @@ class UntypedVectorTest extends TestCase
         ];
     }
 
-
     /**
+     * Tests "has" method.
+     *
      * @dataProvider hasTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::has
      *
      * @param UntypedVector $source
      * @param int           $key
      * @param bool          $expected
+     *
+     * @return void
      */
-    public function testHas(UntypedVector $source, int $key, bool $expected)
+    public function testHas(UntypedVector $source, int $key, bool $expected): void
     {
         $this->assertSame($expected, $source->has($key));
     }
     //</editor-fold>
 
-
     //<editor-fold desc="contains()">
-    public function containsUnstrictTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testContainUnstrict()}
+     *
+     * @return array
+     */
+    public function containsUnstrictTestProvider(): array
     {
         $stringNeedle    = 'Foo';
         $stringIntNeedle = '1';
@@ -536,21 +706,30 @@ class UntypedVectorTest extends TestCase
         ];
     }
 
-
     /**
+     * Test "contains" method with strict flag passed as false.
+     *
      * @dataProvider containsUnstrictTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::contains
      *
      * @param UntypedVector $source
      * @param mixed         $value
      * @param bool          $expected
+     *
+     * @return void
      */
-    public function testContainUnstrict(UntypedVector $source, $value, bool $expected)
+    public function testContainUnstrict(UntypedVector $source, $value, bool $expected): void
     {
         $this->assertSame($expected, $source->contains($value, false));
     }
 
-
-    public function containsStrictTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testContainStrict()}
+     *
+     * @return array
+     */
+    public function containsStrictTestProvider(): array
     {
         $stringNeedle    = 'Foo';
         $stringIntNeedle = '1';
@@ -578,34 +757,43 @@ class UntypedVectorTest extends TestCase
         ];
     }
 
-
     /**
+     * Test "contains" method with strict flag passed as true.
+     *
      * @dataProvider containsStrictTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::contains
      *
      * @param UntypedVector $source
      * @param mixed         $value
      * @param bool          $expected
+     *
+     * @return void
      */
-    public function testContainStrict(UntypedVector $source, $value, bool $expected)
+    public function testContainStrict(UntypedVector $source, $value, bool $expected): void
     {
         $this->assertSame($expected, $source->contains($value, true));
     }
     //</editor-fold>
 
-
     //<editor-fold desc="every()">
-    public function everyTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testEvery()}
+     *
+     * @return array
+     */
+    public function everyTestProvider(): array
     {
-        $intTester = function($val) : bool {
-            return \is_int($val);
+        $intTester = static function($val) : bool {
+            return is_int($val);
         };
 
-        $gt5Tester = function($val) : bool {
+        $gt5Tester = static function($val) : bool {
             return $val > 5;
         };
 
-        $stringTester = function($val) : bool {
-            return \is_string($val);
+        $stringTester = static function($val) : bool {
+            return is_string($val);
         };
 
         return [
@@ -623,34 +811,41 @@ class UntypedVectorTest extends TestCase
         ];
     }
 
-
     /**
      * @dataProvider everyTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::every
      *
      * @param UntypedVector $source
      * @param Closure       $tester
      * @param bool          $expected
+     *
+     * @return void
      */
-    public function testEvery(UntypedVector $source, \Closure $tester, bool $expected)
+    public function testEvery(UntypedVector $source, Closure $tester, bool $expected): void
     {
         $this->assertSame($expected, $source->every($tester));
     }
     //</editor-fold>
 
-
     //<editor-fold desc="some()">
-    public function someTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testSome()}
+     *
+     * @return array
+     */
+    public function someTestProvider(): array
     {
-        $intTester = function($val) : bool {
-            return \is_int($val);
+        $intTester = static function ($val): bool {
+            return is_int($val);
         };
 
-        $gt5Tester = function($val) : bool {
+        $gt5Tester = static function ($val): bool {
             return $val > 5;
         };
 
-        $stringTester = function($val) : bool {
-            return \is_string($val);
+        $stringTester = static function ($val): bool {
+            return is_string($val);
         };
 
         return [
@@ -672,23 +867,30 @@ class UntypedVectorTest extends TestCase
         ];
     }
 
-
     /**
      * @dataProvider someTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::some
      *
      * @param UntypedVector $source
      * @param Closure       $tester
      * @param bool          $expected
+     *
+     * @return void
      */
-    public function testSome(UntypedVector $source, \Closure $tester, bool $expected)
+    public function testSome(UntypedVector $source, Closure $tester, bool $expected): void
     {
         $this->assertSame($expected, $source->some($tester));
     }
     //</editor-fold>
 
-
     //<editor-fold desc="map()">
-    public function mapTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testMap()}
+     *
+     * @return array
+     */
+    public function mapTestProvider(): array
     {
         $doingNothingCb = function(array $x) : array {
             return $x;
@@ -709,15 +911,18 @@ class UntypedVectorTest extends TestCase
         ];
     }
 
-
     /**
      * @dataProvider mapTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::map
      *
      * @param UntypedVector $source
      * @param Closure       $callback
      * @param array         $expected
+     *
+     * @return void
      */
-    public function testMap(UntypedVector $source, \Closure $callback, array $expected)
+    public function testMap(UntypedVector $source, Closure $callback, array $expected): void
     {
         $sourceBackup = $source;
 
@@ -728,9 +933,13 @@ class UntypedVectorTest extends TestCase
     }
     //</editor-fold>
 
-
     //<editor-fold desc="merge()">
-    public function mergeTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testMerge()}
+     *
+     * @return array
+     */
+    public function mergeTestProvider(): array
     {
         return [
             [UntypedVector::create([]),      UntypedVector::create([]),  [],  []],
@@ -746,16 +955,19 @@ class UntypedVectorTest extends TestCase
         ];
     }
 
-
     /**
      * @dataProvider mergeTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::merge
      *
      * @param UntypedVector $a
      * @param UntypedVector $b
      * @param array         $expectedBtoA
      * @param array         $expectedAtoB
+     *
+     * @return void
      */
-    public function testMerge(UntypedVector $a, UntypedVector $b, array $expectedBtoA, array $expectedAtoB)
+    public function testMerge(UntypedVector $a, UntypedVector $b, array $expectedBtoA, array $expectedAtoB): void
     {
         $aSave = $a;
         $bSave = $b;
@@ -768,14 +980,18 @@ class UntypedVectorTest extends TestCase
     }
     //</editor-fold>
 
-
     //<editor-fold desc="filter()">
-    public function filterTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testFilter()}
+     *
+     * @return array
+     */
+    public function filterTestProvider(): array
     {
-        $intFilter = function($x) : bool {
-            return \is_int($x);
+        $intFilter = static function($x) : bool {
+            return is_int($x);
         };
-        $gt5Filter = function($x) : bool {
+        $gt5Filter = static function($x) : bool {
             return $x > 5;
         };
 
@@ -791,11 +1007,15 @@ class UntypedVectorTest extends TestCase
     /**
      * @dataProvider filterTestProvider
      *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::filter
+     *
      * @param UntypedVector $source
      * @param array         $expected
      * @param Closure|null  $callback
+     *
+     * @return void
      */
-    public function testFilter(UntypedVector $source, array $expected, ?\Closure $callback = null)
+    public function testFilter(UntypedVector $source, array $expected, ?Closure $callback = null): void
     {
         $save = $source;
 
@@ -804,9 +1024,13 @@ class UntypedVectorTest extends TestCase
     }
     //</editor-fold>
 
-
     //<editor-fold desc="diff()">
-    public function diffTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testDiff()}
+     *
+     * @return array
+     */
+    public function diffTestProvider(): array
     {
         return [
             [UntypedVector::create([]), [], []],
@@ -817,25 +1041,33 @@ class UntypedVectorTest extends TestCase
         ];
     }
 
-
     /**
      * @dataProvider diffTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::diff
      *
      * @param UntypedVector $a
      * @param array         $b
      * @param array         $expected
+     *
+     * @return void
      */
-    public function testDiff(UntypedVector $a, array $b, array $expected)
+    public function testDiff(UntypedVector $a, array $b, array $expected): void
     {
-        $this->assertSame($expected, $a->diff($b));
+        $this->assertSame($expected, $a->diff($b)->elements);
     }
     //</editor-fold>
 
-
     //<editor-fold desc="diffVector()">
-    public function diffVectorTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testDiffVector()}
+     *
+     * @return array
+     */
+    public function diffVectorTestProvider(): array
     {
         return [
+            [UntypedVector::create(), UntypedVector::create([]), []],
             [UntypedVector::create([]), UntypedVector::create([]), []],
             [UntypedVector::create([]), UntypedVector::create([1]), []],
             [UntypedVector::create([1]), UntypedVector::create([1]), []],
@@ -844,25 +1076,33 @@ class UntypedVectorTest extends TestCase
         ];
     }
 
-
     /**
      * @dataProvider diffVectorTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::diffVector
      *
      * @param UntypedVector $a
      * @param UntypedVector $b
      * @param array         $expected
+     *
+     * @return void
      */
-    public function testDiffVector(UntypedVector $a, UntypedVector $b, array $expected)
+    public function testDiffVector(UntypedVector $a, UntypedVector $b, array $expected): void
     {
         $this->assertSame($expected, $a->diffVector($b)->elements);
     }
     //</editor-fold>
 
-
     //<editor-fold desc="diffKeys()">
-    public function diffKeysTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testDiffKeys()}
+     *
+     * @return array
+     */
+    public function diffKeysTestProvider(): array
     {
         return [
+            [UntypedVector::create(),   [], []],
             [UntypedVector::create([]), [], []],
             [UntypedVector::create([]), [1, 2], []],
             [UntypedVector::create([3, 4]), [], [3, 4]],
@@ -871,25 +1111,33 @@ class UntypedVectorTest extends TestCase
         ];
     }
 
-
     /**
      * @dataProvider diffKeysTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::diffKeys
      *
      * @param UntypedVector $a
      * @param array         $b
      * @param array         $expected
+     *
+     * @return void
      */
-    public function testDiffKeys(UntypedVector $a, array $b, array $expected)
+    public function testDiffKeys(UntypedVector $a, array $b, array $expected): void
     {
         $this->assertSame($expected, $a->diffKeys($b)->elements);
     }
     //</editor-fold>
 
-
     //<editor-fold desc="diffVectorKeys()">
-    public function diffVectorKeysTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testDiffVectorKeys()}
+     *
+     * @return array
+     */
+    public function diffVectorKeysTestProvider(): array
     {
         return [
+            [UntypedVector::create(),                         UntypedVector::create([]),               []],
             [UntypedVector::create([]),                       UntypedVector::create([]),               []],
             [UntypedVector::create([]),                       UntypedVector::create([1, 2]),           []],
             [UntypedVector::create([3, 4]),                   UntypedVector::create([]),               [3, 4]],
@@ -898,81 +1146,107 @@ class UntypedVectorTest extends TestCase
         ];
     }
 
-
     /**
      * @dataProvider diffVectorKeysTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::diffVectorKeys
      *
      * @param UntypedVector $a
      * @param UntypedVector $b
      * @param array         $expected
+     *
+     * @return void
      */
-    public function testDiffVectorKeys(UntypedVector $a, UntypedVector $b, array $expected)
+    public function testDiffVectorKeys(UntypedVector $a, UntypedVector $b, array $expected): void
     {
         $this->assertSame($expected, $a->diffVectorKeys($b)->elements);
     }
     //</editor-fold>
 
-
     //<editor-fold desc="intersect()">
-    public function intersectTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testIntersect()}
+     *
+     * @return array
+     */
+    public function intersectTestProvider(): array
     {
         return [
+            [UntypedVector::create(),                     [],         []],
             [UntypedVector::create([]),                   [],         []],
             [UntypedVector::create([]),                   [1],        []],
             [UntypedVector::create([2]),                  [],         []],
             [UntypedVector::create([2]),                  [2],        [2]],
-            [UntypedVector::create([1, 3, 4, 5]),         [1, 2, 3],  [0 => 1, 2 => 3]],
+            [UntypedVector::create([1, 3, 4, 5]),         [1, 2, 3],  [0 => 1, 1 => 3]],
+            [UntypedVector::create([1, 4, 3, 5]),         [1, 2, 3],  [0 => 1, 2 => 3]],
             [UntypedVector::create(['Foo', 'Baz', 1, 2]), ['Baz', 1], [1 => 'Baz', 2 => 1]]
         ];
     }
 
-
     /**
      * @dataProvider intersectTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::intersect
      *
      * @param UntypedVector $a
      * @param array         $b
      * @param array         $expected
+     *
+     * @return void
      */
-    public function testIntersect(UntypedVector $a, array $b, array $expected)
+    public function testIntersect(UntypedVector $a, array $b, array $expected): void
     {
         $this->assertSame($expected, $a->intersect($b)->elements);
     }
     //</editor-fold>
 
-
     //<editor-fold desc="intersectVector()">
-    public function intersectVectorTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testIntersectVector()}
+     *
+     * @return array
+     */
+    public function intersectVectorTestProvider(): array
     {
         return [
+            [UntypedVector::create(),                     UntypedVector::create([]),         []],
             [UntypedVector::create([]),                   UntypedVector::create([]),         []],
             [UntypedVector::create([]),                   UntypedVector::create([1]),        []],
             [UntypedVector::create([2]),                  UntypedVector::create([]),         []],
             [UntypedVector::create([2]),                  UntypedVector::create([2]),        [2]],
-            [UntypedVector::create([1, 3, 4, 5]),         UntypedVector::create([1, 2, 3]),  [0 => 1, 2 => 3]],
+            [UntypedVector::create([1, 3, 4, 5]),         UntypedVector::create([1, 2, 3]),  [0 => 1, 1 => 3]],
+            [UntypedVector::create([1, 4, 3, 5]),         UntypedVector::create([1, 2, 3]),  [0 => 1, 2 => 3]],
             [UntypedVector::create(['Foo', 'Baz', 1, 2]), UntypedVector::create(['Baz', 1]), [1 => 'Baz', 2 => 1]]
         ];
     }
 
-
     /**
      * @dataProvider intersectVectorTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::intersectVector
      *
      * @param UntypedVector $a
      * @param UntypedVector $b
      * @param array         $expected
+     *
+     * @return void
      */
-    public function testIntersectVector(UntypedVector $a, UntypedVector $b, array $expected)
+    public function testIntersectVector(UntypedVector $a, UntypedVector $b, array $expected): void
     {
         $this->assertSame($expected, $a->intersectVector($b)->elements);
     }
     //</editor-fold>
 
-
     //<editor-fold desc="intersectKeys">
-    public function intersectKeysTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testIntersectKeys()}
+     *
+     * @return array
+     */
+    public function intersectKeysTestProvider(): array
     {
         return [
+            [UntypedVector::create(),                 [],     []],
             [UntypedVector::create([]),               [],     []],
             [UntypedVector::create([2 => 1, 4 => 2]), [],     []],
             [UntypedVector::create([]),               [1, 2], []],
@@ -982,25 +1256,33 @@ class UntypedVectorTest extends TestCase
         ];
     }
 
-
     /**
      * @dataProvider intersectKeysTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::intersectKeys
      *
      * @param UntypedVector $a
      * @param array         $b
      * @param array         $expected
+     *
+     * @return void
      */
-    public function testIntersectKeys(UntypedVector $a, array $b, array $expected)
+    public function testIntersectKeys(UntypedVector $a, array $b, array $expected): void
     {
-        $this->assertSame($expected, $a->intersectKeys($b));
+        $this->assertSame($expected, $a->intersectKeys($b)->elements);
     }
     //</editor-fold>
 
-
     //<editor-fold desc="intersectVectorKeys">
-    public function intersectVectorKeysTestProvider()
+    /**
+     * Provider for {@see UntypedVectorTest::testIntersectVectorKeys()}
+     *
+     * @return array
+     */
+    public function intersectVectorKeysTestProvider(): array
     {
         return [
+            [UntypedVector::create(),                 UntypedVector::create([]),     []],
             [UntypedVector::create([]),               UntypedVector::create([]),     []],
             [UntypedVector::create([2 => 1, 4 => 2]), UntypedVector::create([]),     []],
             [UntypedVector::create([]),               UntypedVector::create([1, 2]), []],
@@ -1010,37 +1292,138 @@ class UntypedVectorTest extends TestCase
         ];
     }
 
+    /**
+     * @dataProvider intersectVectorKeysTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::intersectVectorKeys
+     *
+     * @param UntypedVector $a
+     * @param UntypedVector $b
+     * @param array         $expected
+     *
+     * @return void
+     */
+    public function testIntersectVectorKeys(UntypedVector $a, UntypedVector $b, array $expected): void
+    {
+        $this->assertSame($expected, $a->intersectVectorKeys($b)->elements);
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="replace">
+    /**
+     * Provider for {@see UntypedVectorTest::testReplace()}
+     *
+     * @return array
+     */
+    public function replaceTestProvider(): array
+    {
+        return [
+            [UntypedVector::create(), [], []],
+            [UntypedVector::create([]), [], []],
+            [UntypedVector::create([1 => 'Foo']), [], [1 => 'Foo']],
+            [UntypedVector::create([1 => 'Foo']), [2 => 'Baz'], [1 => 'Foo', 2 => 'Baz']],
+            [UntypedVector::create([1 => 'Foo']), [1 => 'Baz'], [1 => 'Baz']],
+            [UntypedVector::create([1 => true]), [1 => 12.12], [1 => 12.12]]
+        ];
+    }
 
     /**
-     * @dataProvider intersectKeysTestProvider
+     * @dataProvider replaceTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::replace
      *
      * @param UntypedVector $a
      * @param array         $b
      * @param array         $expected
+     *
+     * @return void
      */
-    public function testIntersectVectorKeys(UntypedVector $a, array $b, array $expected)
+    public function testReplace(UntypedVector $a, array $b, array $expected): void
     {
-        $this->assertSame($expected, $a->intersectKeys($b));
+        $this->assertSame($expected, $a->replace($b)->elements);
     }
     //</editor-fold>
 
-
-
-
-    public function testReplace(UntypedVector $a, UntypedVector $b, array $expected)
+    //<editor-fold desc="replaceVector">
+    /**
+     * Provider for {@see UntypedVectorTest::testReplaceVector()}
+     *
+     * @return array
+     */
+    public function replaceVectorTestProvider(): array
     {
-        $this->assertSame($expected, $a->replace($b));
+        return [
+            [UntypedVector::create(), UntypedVector::create([]), []],
+            [UntypedVector::create([]), UntypedVector::create([]), []],
+            [UntypedVector::create([1 => 'Foo']), UntypedVector::create([]), [1 => 'Foo']],
+            [UntypedVector::create([1 => 'Foo']), UntypedVector::create([2 => 'Baz']), [1 => 'Foo', 2 => 'Baz']],
+            [UntypedVector::create([1 => 'Foo']), UntypedVector::create([1 => 'Baz']), [1 => 'Baz']],
+            [UntypedVector::create([1 => true]), UntypedVector::create([1 => 12.12]), [1 => 12.12]]
+        ];
     }
 
-
-    public function testShift()
+    /**
+     * @dataProvider replaceVectorTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::replaceVector
+     *
+     * @param UntypedVector $a
+     * @param UntypedVector $b
+     * @param array $expected
+     *
+     * @return void
+     */
+    public function testReplaceVector(UntypedVector $a, UntypedVector $b, array $expected): void
     {
+        $this->assertSame($expected, $a->replaceVector($b)->elements);
+    }
+    //</editor-fold>
 
+    //<editor-fold desc="shift">
+    /**
+     * Provider for {@see UntypedVectorTest::testShift()}
+     *
+     * @return array
+     */
+    public function shiftTestProvider(): array
+    {
+        return [
+            [UntypedVector::create(), UntypedVector::create([]), null],
+            [UntypedVector::create([]), UntypedVector::create([]), null],
+            [UntypedVector::create([1 => 'Foo']), UntypedVector::create([]), 'Foo'],
+            [UntypedVector::create(['Foo']), UntypedVector::create([]), 'Foo'],
+            [UntypedVector::create([0 => 'Foo', 1 => 'Baz']), UntypedVector::create([0 => 'Baz']), 'Foo'],
+            [UntypedVector::create([1 => 'Foo', 0 => 'Baz']), UntypedVector::create([0 => 'Baz']), 'Foo'],
+        ];
     }
 
+    /**
+     * @dataProvider shiftTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::shift
+     *
+     * @param UntypedVector $a
+     * @param UntypedVector $b
+     * @param mixed         $value
+     *
+     * @return void
+     */
+    public function testShift(UntypedVector $a, UntypedVector $b, $value): void
+    {
+        $retrieved = $a->shift();
 
-    //<editor-fold desc="unshift()">
-    public function unshiftTestProvider()
+        $this->assertSame($value, $retrieved);
+        $this->assertSame($b->elements, $a->elements);
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="unshift">
+    /**
+     * Provider for {@see UntypedVectorTest::testUnshift()}
+     *
+     * @return array
+     */
+    public function unshiftTestProvider(): array
     {
         return [
             [UntypedVector::create([-2 => 1]), 2, UntypedVector::create([-3 => 2, -2 => 1])],
@@ -1054,26 +1437,33 @@ class UntypedVectorTest extends TestCase
         ];
     }
 
-
     /**
      * @dataProvider unshiftTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::unshift
      *
      * @param UntypedVector $a
      * @param int|int[]     $b
      * @param UntypedVector $expected
+     *
+     * @return void
      */
-    public function testUnshift(UntypedVector $a, $b, UntypedVector $expected)
+    public function testUnshift(UntypedVector $a, $b, UntypedVector $expected): void
     {
-        if (\is_array($b)) {
-            $this->assertEquals($expected->all(), $a->unshift(... $b)->all());
+        if (is_array($b)) {
+            $this->assertEquals($expected->elements, $a->unshift(... $b)->elements);
         } else {
-            $this->assertEquals($expected->all(), $a->unshift($b)->all());
+            $this->assertEquals($expected->elements, $a->unshift($b)->elements);
         }
     }
     //</editor-fold>
 
-
-    //<editor-fold desc="push()">
+    //<editor-fold desc="push">
+    /**
+     * Provider for {@see UntypedVectorTest::testPush()}
+     *
+     * @return array
+     */
     public function pushTestProvider()
     {
         return [
@@ -1085,31 +1475,214 @@ class UntypedVectorTest extends TestCase
         ];
     }
 
-
     /**
      * @dataProvider pushTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::push
      *
      * @param UntypedVector $a
      * @param int           $b
      * @param UntypedVector $expected
+     *
+     * @return void
      */
-    public function testPush(UntypedVector $a, int $b, UntypedVector $expected)
+    public function testPush(UntypedVector $a, int $b, UntypedVector $expected): void
     {
-        $this->assertEquals($expected->all(), $a->push($b)->all());
+        $this->assertEquals($expected->elements, $a->push($b)->elements);
     }
     //</editor-fold>
 
-
-    public function testPop()
+    //<editor-fold desc="pop">
+    /**
+     * Provider for {@see UntypedVectorTest::testPop()}
+     *
+     * @return array
+     */
+    public function popTestProvider(): array
     {
-
+        return [
+            [UntypedVector::create(), UntypedVector::create([]), null],
+            [UntypedVector::create([]), UntypedVector::create([]), null],
+            [UntypedVector::create([1 => 'Foo']), UntypedVector::create([]), 'Foo'],
+            [UntypedVector::create([1 => 'Foo', 2 => 'Baz']), UntypedVector::create([1 => 'Foo']), 'Baz'],
+        ];
     }
 
-
-    public function testClear()
+    /**
+     * @dataProvider popTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::pop
+     *
+     * @param UntypedVector $a
+     * @param UntypedVector $b
+     * @param mixed         $value
+     *
+     * @return void
+     */
+    public function testPop(UntypedVector $a, UntypedVector $b, $value): void
     {
+        $retrieved = $a->pop();
 
+        $this->assertSame($retrieved, $value);
+        $this->assertSame($b->elements, $a->elements);
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="clear">
+    /**
+     * Provider for {@see UntypedVectorTest::testClear()}
+     *
+     * @return array
+     */
+    public function clearTestProvider(): array
+    {
+        return [
+            [UntypedVector::create(), []],
+            [UntypedVector::create([]), []],
+            [UntypedVector::create([]), []],
+        ];
     }
 
+    /**
+     * @dataProvider clearTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::clear
+     *
+     * @param UntypedVector $a
+     * @param array $expected
+     *
+     * @return void
+     */
+    public function testClear(UntypedVector $a, array $expected): void
+    {
+        $a->clear();
 
+        $this->assertSame($expected, $a->elements);
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="jsonSerialize">
+    /**
+     * Provider for {@see UntypedVectorTest::testJsonSerialize()} and {@see UntypedVectorTest::testNativeJsonSerialize()}
+     *
+     * @return array
+     */
+    public function jsonSerializeTestProvider(): array
+    {
+        $caseA = [true];
+        $caseB = [1, 3, 4, 5];
+        $caseC = [1, 'Foo', 2.22];
+        $caseD = [0 => 1, 2 => 'Foo', 3 => 2.22];
+
+        return [
+            [UntypedVector::create(), []],
+            [UntypedVector::create([]), []],
+            [UntypedVector::create($caseA), $caseA],
+            [UntypedVector::create($caseB), $caseB],
+            [UntypedVector::create($caseC), $caseC],
+            [UntypedVector::create($caseD), $caseD],
+        ];
+    }
+
+    /**
+     * @dataProvider jsonSerializeTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::jsonSerialize
+     *
+     * @param UntypedVector $a
+     * @param array         $expected
+     *
+     * @return void
+     */
+    public function testJsonSerialize(UntypedVector $a, array $expected): void
+    {
+        $this->assertSame($expected, $a->jsonSerialize());
+    }
+
+    /**
+     * @dataProvider jsonSerializeTestProvider
+     *
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::jsonSerialize
+     *
+     * @param UntypedVector $a
+     * @param array         $expected
+     *
+     * @return void
+     */
+    public function testNativeJsonSerialize(UntypedVector $a, array $expected): void
+    {
+        $this->assertSame(json_encode($expected), json_encode($a));
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="clone">
+    /**
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::clone()
+     *
+     * @return void
+     */
+    public function testCloneWithEmpty(): void
+    {
+        $a = UntypedVector::create();
+        $b = $a->clone();
+
+        $this->assertSame($a->elements, $b->elements);
+        $this->assertNotSame($b, $a);
+    }
+
+    /**
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::clone()
+     *
+     * @return void
+     */
+    public function testCloneWithScalars(): void
+    {
+        $a = UntypedVector::create([1, 'Foo', true, 12.22]);
+        $b = $a->clone();
+
+        $this->assertSame($a->elements, $b->elements);
+        $this->assertNotSame($b, $a);
+    }
+
+    /**
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::clone()
+     *
+     * @throws Exception
+     *
+     * @return void
+     */
+    public function testCloneWithReference(): void
+    {
+        $date = new DateTime();
+
+        $a = UntypedVector::create([$date]);
+        $b = $a->clone();
+
+        $this->assertSame($a->elements, $b->elements);
+        $this->assertNotSame($b, $a);
+
+        $this->assertSame($a->firstValue(), $b->firstValue());
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="getIterator">
+    /**
+     * @covers \ZFekete\DataStructures\Vector\UntypedVector::getIterator()
+     *
+     * @return void
+     */
+    public function testIfIterable(): void
+    {
+        $elements = [1, true, 'Foo'];
+
+        $a = new UntypedVector($elements);
+
+        $new = [];
+        foreach ($a as $item) {
+            $new[] = $item;
+        }
+
+        $this->assertSame($new, $a->elements);
+    }
+    //</editor-fold>
 }

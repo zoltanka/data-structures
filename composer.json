@@ -1,6 +1,8 @@
 {
-    "name": "zfekete/cpollection",
+    "name": "zfekete/collection",
     "type": "library",
+    "description": "Collection repository",
+    "version": "0.0.1",
     "license": "MIT",
     "authors": [
         {
@@ -15,9 +17,11 @@
         }
     },
     "require": {
-        "php" : "^7.3"
+        "php" : "^7.4",
+        "ext-json": "*"
     },
     "require-dev": {
-        "phpunit/phpunit": "^8"
+        "phpunit/phpunit": "^8.1",
+        "phpunit/php-code-coverage": "^7.0"
     }
 }
