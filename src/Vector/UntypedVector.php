@@ -159,7 +159,7 @@ class UntypedVector extends AbstractVector
     }
 
     /**
-     * Returns back a vector containing all element of the current vector whose keys are not present in the given array..
+     * Returns back a vector containing all element of the current vector whose keys are not present in the given array.
      *
      * @param mixed[] $vector
      *
