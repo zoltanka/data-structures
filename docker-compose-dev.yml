@@ -1,0 +1,13 @@
+version: '3'
+services:
+  unit-test:
+    build:
+      context: .
+
+    volumes:
+      - ./docker/config/opt/docker/etc/php/php.ini:/opt/docker/etc/php/php.ini
+    # Enable for during development
+      - ./:/src
+
+    # Entrypoint to run unit test
+    entrypoint: vendor/bin/phpunit

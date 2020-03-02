@@ -134,7 +134,7 @@ class VectorTest extends TestCase
 
         $this->expectException(TypeError::class);
         $this->expectExceptionMessage(sprintf(
-            'Argument 2 expected to be %s, %s received',
+            'Argument 2 has to be %s, %s received!',
             Vector::TYPE_INT,
             Vector::TYPE_STRING
         ));
@@ -208,7 +208,7 @@ class VectorTest extends TestCase
         $default = '12';
         $this->expectException(TypeError::class);
         $this->expectExceptionMessage(sprintf(
-            'Argument 1 expected to be %s, %s received!',
+            'Argument 1 has to be %s, %s received!',
             Vector::TYPE_INT,
             Vector::TYPE_STRING
         ));
@@ -282,7 +282,7 @@ class VectorTest extends TestCase
         $default = '12';
         $this->expectException(TypeError::class);
         $this->expectExceptionMessage(sprintf(
-            'Argument 1 expected to be %s, %s received!',
+            'Argument 1 has to be %s, %s received!',
             Vector::TYPE_INT,
             Vector::TYPE_STRING
         ));
@@ -386,7 +386,7 @@ class VectorTest extends TestCase
 
         $this->expectException(TypeError::class);
         $this->expectExceptionMessage(sprintf(
-            'Argument 1 expected to be %s, %s received!',
+            'Argument 1 has to be %s, %s received!',
             Vector::TYPE_BOOL,
             Vector::TYPE_INT
         ));
@@ -403,7 +403,7 @@ class VectorTest extends TestCase
 
         $this->expectException(TypeError::class);
         $this->expectExceptionMessage(sprintf(
-            'Argument 1 expected to be %s, %s received!',
+            'Argument 1 has to be %s, %s received!',
             Vector::TYPE_INT,
             Vector::TYPE_STRING
         ));
@@ -420,7 +420,7 @@ class VectorTest extends TestCase
 
         $this->expectException(TypeError::class);
         $this->expectExceptionMessage(sprintf(
-            'Argument 1 expected to be %s, %s received!',
+            'Argument 1 has to be %s, %s received!',
             Vector::TYPE_STRING,
             Vector::TYPE_INT
         ));
@@ -1070,7 +1070,7 @@ class VectorTest extends TestCase
             [Vector::create(Vector::TYPE_INT, [9 => 5]),  2, [9 => 5, 10 => 2]],
 
             [Vector::create(Vector::TYPE_STRING, [9 => 'Foo']),  'Baz', [9 => 'Foo', 10 => 'Baz']],
-            [Vector::create(Vector::TYPE_STRING, [-7 => 'Foo']), 'Baz', [-7 => 'Foo', -6 => 'Baz']]
+            [Vector::create(Vector::TYPE_STRING, [-7 => 'Foo']), 'Baz', [-7 => 'Foo', 0 => 'Baz']]
         ];
     }
 
